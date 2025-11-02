@@ -39,7 +39,7 @@ export function Home() {
 
   const [success, setSuccess] = useState<boolean | undefined>(undefined)
   const [startDate,setStartDate] = useState<Date>(new Date())
-  const [_, setValue, _] = useLocalStorage<imageStats>("imageGPData", {
+  const [_, setValue, rV] = useLocalStorage<imageStats>("imageGPData", {
     success: 0,
     failed: 0,
     total: 0,
