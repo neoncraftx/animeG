@@ -1,0 +1,29 @@
+@keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+.menuAmburgerItems {
+  background-color: rgba(255, 255, 255, 0.514);
+  border: 2px solid grey;
+  padding: 5px 1em;
+  width: 75%;
+  text-align: center;
+  border-radius: 10px;
+  margin: 10px;
+}
+.hoverMenuAmburgerButton:hover {
+  background: rgba(1, 0, 37, 0.589);
+  size: 100px;
+  color: rgb(255, 255, 255);
+}
+.bgMenuAmburgerButton{
+  background-color: rgba(28, 47, 156, 0.75);
+  border: none;
+}
