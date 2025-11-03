@@ -116,6 +116,7 @@ export function MenuAmburgerItems() {
           classNames={["hoverMenuAmburgerButton", "bgMenuAmburgerButton"]}
         ></Button>
       </Link>
+      <div className="text-center bg-success p-3 " style={{position: "absolute",width: "100%",bottom: 0}}>Crée par @TechnoOtaku</div>
     </div>
   );
 }
