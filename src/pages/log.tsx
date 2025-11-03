@@ -9,7 +9,7 @@ type imageStats = {
     status: boolean | undefined;
     total: number;
     date: Date;
-    images: [
+    images?: [
       {
         url: string;
         count: number;
@@ -30,14 +30,14 @@ export function LogPage() {
     images: []
   };
   // Pour l'exemple, nous utilisons des données statiques
-  const stats: imageStats = JSON.parse(localStorage?.getItem("imageGPData") ? localStorage?.getItem("imageGPData") || ""  : JSON.stringify(defauftData))
-
+  const stats: imageStats = JSON.parse(localStorage?.getItem("imageGPData") || '') ?? defauftData
+  console.log(stats)
   return (
     <>
       <MenuAmburger />
       <div className="container my-4">
         <h3 className="text-center mb-4">Tableau de Bord des Logs</h3>
-
+ 
         {/* Cartes des statistiques */}
         <div className="row g-4 mb-4">
           <div className="col-md-4">
@@ -47,10 +47,11 @@ export function LogPage() {
                   Générations Réussies
                 </h5>
                 <p className="display-4 text-success">{stats.success}</p>
+                {stats?.total > 0 && 
                 <p className="text-muted">
                   ({((stats.success / stats.total) * 100).toFixed(1)}% de
                   succès)
-                </p>
+                </p>}
               </div>
             </div>
           </div>
@@ -60,9 +61,10 @@ export function LogPage() {
               <div className="card-body text-center">
                 <h5 className="card-title text-danger">Échecs de Génération</h5>
                 <p className="display-4 text-danger">{stats.failed}</p>
-                <p className="text-muted">
+
+                {stats?.total > 0 && <p className="text-muted">
                   ({((stats.failed / stats.total) * 100).toFixed(1)}% d'échecs)
-                </p>
+                </p>}
               </div>
             </div>
           </div>
@@ -85,14 +87,15 @@ export function LogPage() {
               <div className="card-header">
                 <h5 className="mb-0">Dernière Image Générée</h5>
               </div>
+              {stats?.total > 0 ?
               <div className="card-body">
                 <div className="row align-items-center">
                   <div className="col-md-4">
-                    <img
+                    {stats.lastImage !== "" && <img
                       src={stats.lastImage}
                       alt="Dernière image générée"
                       className="img-fluid rounded shadow"
-                    />
+                    />}
                   </div>
                   <div className="col-md-8">
                     <h6>Informations de génération</h6>
@@ -122,13 +125,13 @@ export function LogPage() {
                     </table>
                   </div>
                 </div>
-              </div>
+              </div> : <p className="text-center">Aucune Image Générée</p>}
             </div>
           </div>
         </div>
 
         <h3>Génération précédente</h3>
-        <ImageCreatedList images={[...stats?.images]?.reverse().map(img => img.url) || []} />
+        {stats?.images && <ImageCreatedList images={[...stats?.images]?.reverse().map(img => img.url) || []} />}
       </div>
     </>
   );

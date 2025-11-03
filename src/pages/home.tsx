@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { ButtonSpinner } from "../components/Button";
 import { GrAddCircle } from "react-icons/gr";
-import { ImagePreview,type ImageData} from "../components/Imagepreview";
+import { ImagePreview, type ImageData } from "../components/Imagepreview";
 import axios from "axios";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
 import { MenuAmburger } from "../components/menu";
@@ -35,11 +35,11 @@ export function Home() {
   const [label, setLabel] = useState<string>("Générer");
   const [gLabel, setGLabel] = useState<string>("Génération");
 
-  useDocumentTitle("Accueil")
+  useDocumentTitle("Accueil");
 
-  const [success, setSuccess] = useState<boolean | undefined>(undefined)
-  const [startDate,setStartDate] = useState<Date>(new Date())
-  const [_, setValue, rV] = useLocalStorage<imageStats>("imageGPData", {
+  const [success, setSuccess] = useState<boolean | undefined>(undefined);
+  const [startDate, setStartDate] = useState<Date>(new Date());
+  const defaultV: imageStats = {
     success: 0,
     failed: 0,
     total: 0,
@@ -47,69 +47,72 @@ export function Home() {
     status: undefined,
     date: new Date(),
     time: undefined,
-    images: [] as { url: string; count: number; date: Date }[]
-  });
-  
+    images: [] as { url: string; count: number; date: Date }[],
+  };
+  const [value, setValue, rV] = useLocalStorage<imageStats>(
+    "imageGPData",
+    defaultV
+  );
+
   // useEffect(() => {
   //   removeValue()
   // },[])
   useEffect(() => {
-    const addImageUrl = () => {
-      setValue((v) => {
-        const existingImage = v?.images?.find((img) => img.url === imageUrl);
-        if (existingImage) {
-          existingImage.count += 1;
-        } else {
-          v.images.push({ url: imageUrl, count: 1,date: new Date() });
-        }
-        return { ...v};
-      });
-    };
-    const addSuccess = () =>
-      addImageUrl()
+    if (success !== undefined) {
+      const addImageUrl = () => {
+        setValue((v) => {
+          const existingImage = v?.images?.find((img) => img.url === imageUrl);
+          if (existingImage) {
+            existingImage.count += 1;
+          } else {
+            v.images.push({ url: imageUrl, count: 1, date: new Date() });
+          }
+          return { ...v };
+        });
+      };
+      const addSuccess = () => addImageUrl();
       setValue((v) => {
         return {
           ...v,
           success: v.success + 1,
         };
       });
-    const addFailure = () =>
-      setValue((v) => {
-        return {
-          ...v,
-          failed: v.failed + 1,
-        };
-      });
-    const addTotal = () =>
-      setValue((v) => {
-        return {
-          ...v,
-          total: v.total + 1,
-          date: new Date(),
-          status: success,
-          time: new Date() - startDate
-        };
-      });
-    const setLastImage = () =>
-      setValue((v) => {
-        return {
-          ...v,
-          lastImage: imageUrl,
-        };
-      });
-
-    if (success !== undefined){
-      if (success) {
-          console.log("REussite")
+      const addFailure = () =>
+        setValue((v) => {
+          return {
+            ...v,
+            failed: v.failed + 1,
+          };
+        });
+      const addTotal = () =>
+        setValue((v) => {
+          return {
+            ...v,
+            total: v.total + 1,
+            date: new Date(),
+            status: success,
+            time: new Date() - startDate,
+          };
+        });
+      const setLastImage = () =>
+        setValue((v) => {
+          return {
+            ...v,
+            lastImage: imageUrl,
+          };
+        });
+      if (success === true) {
+        console.log("REussite");
         addSuccess();
       } else {
-          console.log("ECHEC")
+        console.log("ECHEC");
         addFailure();
+        console.log(value)
       }
       addTotal();
       setLastImage();
     }
-  }, [success,imageUrl]);
+  }, [success, imageUrl]);
   return (
     <div>
       <h1 className="text-center m-3">Waifu Generator</h1>
@@ -123,7 +126,7 @@ export function Home() {
           gLabel={gLabel}
           loading={loading}
           onClick={async () => {
-            setStartDate(new Date())
+            setStartDate(new Date());
             setLoading(true);
             try {
               const { imageUrl, data } = await generateRandomWaifu();
@@ -132,9 +135,9 @@ export function Home() {
               setVariant("success");
               setLabel("Généré !");
               setGLabel("Génération terminée !");
-              setSuccess(true)
+              setSuccess(true);
             } catch (error) {
-              setSuccess(false)
+              setSuccess(false);
               console.error("Error generating waifu:", error);
               setVariant("danger");
               setGLabel("Erreur de génération");
@@ -143,6 +146,7 @@ export function Home() {
                 setLoading(false);
                 setVariant("primary");
                 setGLabel("Génération");
+                setSuccess(undefined);
               }, 1000);
             }
           }}
@@ -181,7 +185,7 @@ async function generateRandomWaifu(): Promise<{
   console.log("Request URL:", requestUrl);
 
   const response = await axios.get(requestUrl);
-  if (response.status <= 201 ) {
+  if (response.status <= 201) {
     const data = await response.data;
     // Process the response data as needed
     const imageData: ImageData = data.images[0];
