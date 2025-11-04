@@ -10,17 +10,24 @@ import { useLocalStorage } from "usehooks-ts";
 type imageStats = {
   success: number;
   failed: number;
-  time: Date | undefined;
-  lastImage: string | undefined;
-  status: boolean | undefined;
+  // elapsed time in milliseconds
+  time?: number;
+  lastImage?: string;
+  status?: boolean;
   total: number;
-  images: [
-    {
-      url: string;
-      count: number;
-      date?: Date;
-    }
-  ];
+  date?: Date;
+  images: { url: string; count: number; date?: Date }[];
+};
+
+const defaultV: imageStats = {
+  success: 0,
+  failed: 0,
+  total: 0,
+  lastImage: undefined,
+  status: undefined,
+  date: new Date(),
+  time: undefined,
+  images: [],
 };
 export function Home() {
   //Image config
@@ -39,80 +46,52 @@ export function Home() {
 
   const [success, setSuccess] = useState<boolean | undefined>(undefined);
   const [startDate, setStartDate] = useState<Date>(new Date());
-  const defaultV: imageStats = {
-    success: 0,
-    failed: 0,
-    total: 0,
-    lastImage: undefined,
-    status: undefined,
-    date: new Date(),
-    time: undefined,
-    images: [] as { url: string; count: number; date: Date }[],
-  };
-  const [value, setValue, rV] = useLocalStorage<imageStats>(
-    "imageGPData",
-    defaultV
-  );
+  const [, setValue] = useLocalStorage<imageStats>("imageGPData", defaultV);
 
   // useEffect(() => {
   //   removeValue()
   // },[])
   useEffect(() => {
-    if (success !== undefined) {
-      const addImageUrl = () => {
-        setValue((v) => {
-          const existingImage = v?.images?.find((img) => img.url === imageUrl);
-          if (existingImage) {
-            existingImage.count += 1;
-          } else {
-            v.images.push({ url: imageUrl, count: 1, date: new Date() });
-          }
-          return { ...v };
-        });
-      };
-      const addSuccess = () => addImageUrl();
-      setValue((v) => {
-        return {
-          ...v,
-          success: v.success + 1,
-        };
-      });
-      const addFailure = () =>
-        setValue((v) => {
-          return {
-            ...v,
-            failed: v.failed + 1,
-          };
-        });
-      const addTotal = () =>
-        setValue((v) => {
-          return {
-            ...v,
-            total: v.total + 1,
-            date: new Date(),
-            status: success,
-            time: new Date() - startDate,
-          };
-        });
-      const setLastImage = () =>
-        setValue((v) => {
-          return {
-            ...v,
-            lastImage: imageUrl,
-          };
-        });
+    if (success === undefined) return;
+
+    // Do a single, immutable update so localStorage receives a consistent state
+    setValue((prev) => {
+      const v = prev ?? defaultV;
+
+      // clone images array (avoid mutating prev)
+      const images = v.images ? [...v.images] : [];
+
+      let successCount = v.success;
+      let failedCount = v.failed;
+
       if (success === true) {
-        console.log("REussite");
-        addSuccess();
+        successCount = (v.success ?? 0) + 1;
+        const idx = images.findIndex((img) => img.url === imageUrl);
+        if (idx >= 0) {
+          images[idx] = { ...images[idx], count: images[idx].count + 1 };
+        } else {
+          images.push({ url: imageUrl, count: 1, date: new Date() });
+        }
       } else {
-        console.log("ECHEC");
-        addFailure();
-        console.log(value)
+        failedCount = (v.failed ?? 0) + 1;
       }
-      addTotal();
-      setLastImage();
-    }
-  }, [success, imageUrl]);
+
+      const now = new Date();
+      const elapsed = startDate ? now.getTime() - startDate.getTime() : undefined;
+
+      return {
+        ...v,
+        success: successCount,
+        failed: failedCount,
+        total: (v.total ?? 0) + 1,
+        date: now,
+        time: elapsed,
+        status: success,
+        lastImage: imageUrl,
+        images,
+      };
+    });
+  }, [success, imageUrl, startDate, setValue]);
   return (
     <div>
       <h1 className="text-center m-3">Waifu Generator</h1>
@@ -172,15 +151,14 @@ async function generateRandomWaifu(): Promise<{
 
   const queryParams = new URLSearchParams();
 
-  for (const key in params) {
-    if (Array.isArray(params[key])) {
-      params[key].forEach((value) => {
-        queryParams.append(key, value);
-      });
+  (Object.keys(params) as Array<keyof typeof params>).forEach((key) => {
+    const val = params[key];
+    if (Array.isArray(val)) {
+      val.forEach((v) => queryParams.append(key, String(v)));
     } else {
-      queryParams.set(key, params[key]);
+      queryParams.set(key, String(val));
     }
-  }
+  });
   const requestUrl = `${apiUrl}?${queryParams.toString()}`;
   console.log("Request URL:", requestUrl);
 

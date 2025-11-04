@@ -31,7 +31,8 @@ export function LogPage() {
   };
   // Pour l'exemple, nous utilisons des données statiques
   const stats: imageStats = JSON.parse(localStorage?.getItem("imageGPData") || '') ?? defauftData
-  console.log(stats)
+  if(!stats?.success) stats.success = 0
+  if(!stats?.failed) stats.failed = 0
   return (
     <>
       <MenuAmburger />
